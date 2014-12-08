@@ -765,6 +765,23 @@ var requirejs, require, define;
                 //would affect that config.
                 this.depMaps = depMaps && depMaps.slice(0);
 
+                //Use module constructor dependency injections.
+                //See http://misko.hevery.com/2009/02/19/constructor-injection-vs-setter-injection/
+                //Where appropriate the dependency is remapped using config.constructs.
+                if (isArray(depMaps) && depMaps.length == 0 && isFunction(factory)) {
+                    this.depMaps = factory.toString()
+                        .replace(/((\/\/.*$)|(\/\*[\s\S]*?\*\/)|(\s))/mg,'')
+                        .match(/^function\s*[^\(]*\(\s*([^\)]*)\)/m)[1]
+                        .split(/,/)
+                        .slice(0);
+                    this.depMaps.forEach(function(val,i,arr) {
+                        arr[i] = (config.constructs && config.constructs[val]) || arr[i];
+                    });
+                    if (this.depMaps.length == 1 && this.depMaps[0] == '') {
+                        this.depMaps = [];
+                    }
+                }
+
                 this.errback = errback;
 
                 //Indicate this module has be initialized
